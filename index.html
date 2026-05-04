@@ -1,61 +1,128 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8" />
   <title>Rifa Jamón</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
   <style>
-    body { font-family: Arial; padding: 10px; }
-    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-    .card {
-      padding: 20px;
+    body {
+      font-family: Arial;
+      background: #f5f5f5;
       text-align: center;
-      border-radius: 10px;
-      font-size: 20px;
-      font-weight: bold;
-      cursor: pointer;
+      margin: 0;
     }
-    .disponible { background: #eee; }
-    .vendido { background: orange; }
-    .pagado { background: green; color: white; }
+
+    h1 {
+      margin: 20px 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      padding: 15px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .num {
+      padding: 20px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 18px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .num:hover {
+      transform: scale(1.05);
+    }
+
+    .disponible {
+      background: #ddd;
+    }
+
+    .vendido {
+      background: #ffcc00;
+    }
+
+    .pagado {
+      background: #00cc66;
+      color: white;
+    }
   </style>
 </head>
+
 <body>
 
-<h2>Rifa Jamón</h2>
+<h1>Rifa Jamón</h1>
+
 <div class="grid" id="grid"></div>
 
 <script>
-const supabase = window.supabase.createClient(
-  "TU_URL",
-  "TU_ANON_KEY"
-);
+const SUPABASE_URL = "https://lahtsdinzrqslqbthysx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_IyN4z4MIO-G3auJ9PTBn_g_-xrxk1XO";
 
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// 🔄 Cargar números
 async function cargar() {
-  const { data } = await supabase.from("rifa").select("*").order("numero");
+  const { data, error } = await supabase
+    .from("rifa")
+    .select("*")
+    .order("numero");
+
+  if (error) {
+    alert("Error cargando datos");
+    console.log(error);
+    return;
+  }
 
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
   data.forEach(n => {
-    let clase = "disponible";
-    if (n.pagado) clase = "pagado";
-    else if (n.estado === "vendido") clase = "vendido";
-
     const div = document.createElement("div");
-    div.className = "card " + clase;
+
+    let clase = "disponible";
+
+    if (n.estado === "vendido") clase = "vendido";
+    if (n.pagado) clase = "pagado";
+
+    div.className = "num " + clase;
     div.innerText = n.numero;
 
+    // 👉 CLICK PARA VENDER
     div.onclick = async () => {
       if (n.estado !== "disponible") return;
 
-      const nombre = prompt("Nombre comprador:");
+      const nombre = prompt("Nombre del comprador:");
       if (!nombre) return;
 
-      await supabase.from("rifa").update({
-        estado: "vendido",
-        nombre: nombre
-      }).eq("id", n.id);
+      await supabase
+        .from("rifa")
+        .update({
+          estado: "vendido",
+          nombre: nombre,
+          fecha: new Date().toISOString()
+        })
+        .eq("id", n.id);
+
+      cargar();
+    };
+
+    // 👉 DOBLE CLICK = PAGADO
+    div.ondblclick = async () => {
+      if (n.estado !== "vendido") return;
+
+      await supabase
+        .from("rifa")
+        .update({
+          pagado: true
+        })
+        .eq("id", n.id);
 
       cargar();
     };
