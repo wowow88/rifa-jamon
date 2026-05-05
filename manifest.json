@@ -1,0 +1,17 @@
+{
+  "name": "Rifa Jamón",
+  "short_name": "Rifa Jamón",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#111827",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://rifa-jamon.vercel.app/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
